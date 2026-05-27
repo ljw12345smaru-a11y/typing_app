@@ -12,6 +12,14 @@ export default function App() {
   const [startTime, setStartTime] = React.useState(null);
   const [time, setTime] = React.useState(0);
 
+  const [nickname, setNickname] = React.useState(
+    localStorage.getItem("nickname") || ""
+  );
+
+  const [bestScore, setBestScore] = React.useState(
+    Number(localStorage.getItem("bestScore")) || 0
+  );
+
   React.useEffect(() => {
     let timer;
 
@@ -34,12 +42,23 @@ export default function App() {
 
     setInput(value);
 
-if (
-  value.replace(/\s/g, "").length >=
-  anthem.replace(/\s/g, "").length
-) {
-  setFinished(true);
-}
+    // 공백 제거 후 길이 비교
+    const cleanValue = value.replace(/\s/g, "");
+    const cleanAnthem = anthem.replace(/\s/g, "");
+
+    if (cleanValue.length >= cleanAnthem.length) {
+      setFinished(true);
+
+      const finalSpeed = Math.round((value.length / time) * 60);
+
+      // 최고 기록 저장
+      if (finalSpeed > bestScore) {
+        setBestScore(finalSpeed);
+
+        localStorage.setItem("bestScore", finalSpeed);
+        localStorage.setItem("nickname", nickname);
+      }
+    }
   };
 
   const getAccuracy = () => {
@@ -59,7 +78,7 @@ if (
   const getSpeed = () => {
     if (time === 0) return 0;
 
-    return Math.round(input.length / time);
+    return Math.round((input.length / time) * 60);
   };
 
   const restart = () => {
@@ -71,48 +90,84 @@ if (
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#f3f4f6",
-      padding: "20px",
-      fontFamily: "sans-serif"
-    }}>
-      <div style={{
-        maxWidth: "700px",
-        margin: "0 auto",
-        background: "white",
-        borderRadius: "20px",
-        padding: "20px"
-      }}>
-        <h1>애국가 타자 연습</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f3f4f6",
+        padding: "20px",
+        fontFamily: "sans-serif"
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "700px",
+          margin: "0 auto",
+          background: "white",
+          borderRadius: "20px",
+          padding: "20px",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)"
+        }}
+      >
+        <h1 style={{ textAlign: "center" }}>
+          애국가 타자 연습
+        </h1>
 
+        {/* 닉네임 입력 */}
+        <input
+          type="text"
+          placeholder="닉네임 입력"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "20px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "1px solid #ccc"
+          }}
+        />
+
+        {/* 정보 표시 */}
         <p>시간: {time.toFixed(1)}초</p>
         <p>정확도: {getAccuracy()}%</p>
-        <p>속도: {getSpeed()} 타/초</p>
+        <p>현재 속도: {getSpeed()} 타/분</p>
+        <p>최고 기록: {bestScore} 타/분</p>
 
-        <div style={{
-          whiteSpace: "pre-line",
-          lineHeight: "2",
-          padding: "20px",
-          background: "#f9fafb",
-          borderRadius: "10px",
-          marginBottom: "20px"
-        }}>
+        {/* 애국가 표시 */}
+        <div
+          style={{
+            whiteSpace: "pre-line",
+            lineHeight: "2",
+            padding: "20px",
+            background: "#f9fafb",
+            borderRadius: "10px",
+            marginBottom: "20px",
+            fontSize: "18px"
+          }}
+        >
           {anthem.split("").map((char, index) => {
             let color = "black";
 
             if (index < input.length) {
-              color = input[index] === char ? "green" : "red";
+              color =
+                input[index] === char
+                  ? "green"
+                  : "red";
             }
 
             return (
-              <span key={index} style={{ color }}>
+              <span
+                key={index}
+                style={{ color }}
+              >
                 {char}
               </span>
             );
           })}
         </div>
 
+        {/* 입력창 */}
         <textarea
           value={input}
           onChange={handleChange}
@@ -122,46 +177,73 @@ if (
             width: "100%",
             height: "200px",
             fontSize: "18px",
-            padding: "10px"
+            padding: "10px",
+            borderRadius: "10px",
+            border: "1px solid #ccc"
           }}
         />
 
+        {/* 다시 시작 버튼 */}
         <button
           onClick={restart}
           style={{
             marginTop: "20px",
-            padding: "10px 20px",
-            fontSize: "16px"
+            padding: "12px 20px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            cursor: "pointer"
           }}
         >
           다시 시작
         </button>
 
+        {/* 완료 결과 */}
         {finished && (
-  <div style={{
-    marginTop: "20px",
-    padding: "20px",
-    background: "#dcfce7",
-    borderRadius: "10px",
-    textAlign: "center"
-  }}>
-    <h2>타자 연습 완료!</h2>
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "20px",
+              background: "#dcfce7",
+              borderRadius: "10px",
+              textAlign: "center"
+            }}
+          >
+            <h2>타자 연습 완료!</h2>
 
-    <p>총 입력 타수: {input.length}타</p>
+            <p>
+              닉네임: {nickname}
+            </p>
 
-    <p>걸린 시간: {time.toFixed(1)}초</p>
+            <p>
+              총 입력 타수:
+              {" "}
+              {input.length}타
+            </p>
 
-    <p>
-      최종 속도:
-      {" "}
-      {Math.round((input.length / time) * 60)}
-      {" "}
-      타/분
-    </p>
+            <p>
+              걸린 시간:
+              {" "}
+              {time.toFixed(1)}초
+            </p>
 
-    <p>정확도: {getAccuracy()}%</p>
-  </div>
-)}
+            <p>
+              최종 속도:
+              {" "}
+              {Math.round((input.length / time) * 60)}
+              {" "}
+              타/분
+            </p>
+
+            <p>
+              정확도:
+              {" "}
+              {getAccuracy()}%
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
